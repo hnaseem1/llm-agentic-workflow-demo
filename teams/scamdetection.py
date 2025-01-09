@@ -1,3 +1,4 @@
+import os
 from typing import List, AsyncIterator
 from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.messages import MultiModalMessage
@@ -10,6 +11,7 @@ from agents.linkchecker import url_checker
 from agents.contentanalyst import content_analyst
 from agents.decisionmaker import decision_maker
 from agents.summaryagent import summary_agent
+from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 class ScamDetectorTeam:
     """
@@ -20,12 +22,24 @@ class ScamDetectorTeam:
         """
         Initialize ScamDetector with agents and tools
         """
+        self.model = self.initialize_model()
         self.agents = self.create_agents()
         self.team = self.create_team()
 
+    def initialize_model(self) -> OpenAIChatCompletionClient:
+        """Initialize OpenAI model"""
+        return OpenAIChatCompletionClient(
+            model=os.getenv("MODEL"),
+            api_key=os.getenv("OPENAI_API_KEY")
+        )
+    
     def create_agents(self) -> List[AssistantAgent]:
         """Create all required agents with their specialized roles and tools"""
-        agents = [ocr_specialist, url_checker, content_analyst, decision_maker, summary_agent]
+        agents = []
+        agent_funcs = [ocr_specialist, url_checker, content_analyst, decision_maker, summary_agent]
+        for fn in agent_funcs:
+            agent = fn(self.model)
+            agents.append(agent)
         return agents
     
     def create_team(self) -> RoundRobinGroupChat:

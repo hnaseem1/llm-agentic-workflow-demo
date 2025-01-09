@@ -1,6 +1,6 @@
 from PIL import Image
 import gradio as gr
-from agents import ScamDetectorTeam
+from teams.scamdetection import ScamDetectorTeam
 from tools.formatter import AutoGenFormatter
 
 
